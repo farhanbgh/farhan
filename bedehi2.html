@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مدیریت بدهی‌ها</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Vazirmatn', sans-serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .debt-owed {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .debt-receive {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .total-balance {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .tab-active {
+            background: white;
+            color: #667eea;
+        }
+        
+        .paid-item {
+            opacity: 0.6;
+            text-decoration: line-through;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <div class="gradient-bg text-white py-8 mb-8 shadow-lg">
+        <div class="container mx-auto px-4">
+            <h1 class="text-4xl font-bold text-center mb-2">💰 مدیریت بدهی‌ها</h1>
+            <p class="text-center text-white/90">مدیریت هوشمند بدهی‌ها و طلبکاری‌ها</p>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 max-w-7xl pb-12">
+        <!-- Dashboard Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="debt-owed text-white rounded-2xl p-6 shadow-lg card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-white/90 mb-2">بدهی من</p>
+                        <h3 class="text-3xl font-bold" id="totalOwed">0</h3>
+                        <p class="text-sm mt-1">تومان</p>
+                    </div>
+                    <div class="text-5xl">📤</div>
+                </div>
+            </div>
+            
+            <div class="debt-receive text-white rounded-2xl p-6 shadow-lg card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-white/90 mb-2">طلب من</p>
+                        <h3 class="text-3xl font-bold" id="totalReceive">0</h3>
+                        <p class="text-sm mt-1">تومان</p>
+                    </div>
+                    <div class="text-5xl">📥</div>
+                </div>
+            </div>
+            
+            <div class="total-balance text-white rounded-2xl p-6 shadow-lg card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-white/90 mb-2">موجودی کلی</p>
+                        <h3 class="text-3xl font-bold" id="netBalance">0</h3>
+                        <p class="text-sm mt-1">تومان</p>
+                    </div>
+                    <div class="text-5xl">💵</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="bg-white rounded-2xl shadow-lg p-2 mb-8 inline-flex gap-2">
+            <button onclick="showTab('add')" id="tabAdd" class="tab-active px-6 py-3 rounded-xl font-semibold transition-all">
+                ➕ افزودن بدهی
+            </button>
+            <button onclick="showTab('list')" id="tabList" class="px-6 py-3 rounded-xl font-semibold transition-all hover:bg-gray-100">
+                📋 لیست بدهی‌ها
+            </button>
+            <button onclick="showTab('report')" id="tabReport" class="px-6 py-3 rounded-xl font-semibold transition-all hover:bg-gray-100">
+                📊 گزارش‌ها
+            </button>
+        </div>
+
+        <!-- Add Debt Section -->
+        <div id="addSection" class="fade-in">
+            <div class="bg-white rounded-2xl shadow-lg p-8">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">ثبت بدهی جدید</h2>
+                <form id="debtForm" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2">نام شخص / سازمان</label>
+                            <input type="text" id="personName" required 
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-all">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2">مبلغ (تومان)</label>
+                            <input type="number" id="amount" required 
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-all"
+                                placeholder="مثال: 500000">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2">نوع بدهی</label>
+                            <select id="debtType" required 
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-all">
+                                <option value="owed">من بدهکارم</option>
+                                <option value="receive">به من بدهکار است</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2">تاریخ</label>
+                            <input type="date" id="debtDate" required 
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-all">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">توضیحات</label>
+                        <textarea id="description" rows="3" 
+                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-all"
+                            placeholder="توضیحات اضافی در مورد این بدهی..."></textarea>
+                    </div>
+                    
+                    <button type="submit" 
+                        class="w-full gradient-bg text-white py-4 rounded-xl font-bold text-lg hover:opacity-90 transition-all shadow-lg">
+                        ✅ ثبت بدهی
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- List Section -->
+        <div id="listSection" class="hidden">
+            <div class="bg-white rounded-2xl shadow-lg p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">لیست بدهی‌ها</h2>
+                    <div class="flex gap-2">
+                        <button onclick="filterDebts('all')" id="filterAll" class="px-4 py-2 bg-purple-500 text-white rounded-lg font-semibold text-sm">
+                            همه
+                        </button>
+                        <button onclick="filterDebts('owed')" id="filterOwed" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm">
+                            بدهی‌ها
+                        </button>
+                        <button onclick="filterDebts('receive')" id="filterReceive" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm">
+                            طلب‌ها
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="debtsList" class="space-y-4"></div>
+            </div>
+        </div>
+
+        <!-- Report Section -->
+        <div id="reportSection" class="hidden">
+            <div class="bg-white rounded-2xl shadow-lg p-8">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">گزارش‌های تفصیلی</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="border-2 border-purple-200 rounded-xl p-6">
+                        <h3 class="text-lg font-bold mb-4 text-purple-700">📊 آمار کلی</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">تعداد کل بدهی‌ها:</span>
+                                <span class="font-bold" id="reportTotalDebts">0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">تعداد بدهی‌های من:</span>
+                                <span class="font-bold text-red-500" id="reportOwedCount">0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">تعداد طلب‌های من:</span>
+                                <span class="font-bold text-blue-500" id="reportReceiveCount">0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">بدهی‌های پرداخت شده:</span>
+                                <span class="font-bold text-green-500" id="reportPaidCount">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="border-2 border-green-200 rounded-xl p-6">
+                        <h3 class="text-lg font-bold mb-4 text-green-700">💰 آمار مالی</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">مجموع بدهی من:</span>
+                                <span class="font-bold text-red-500" id="reportTotalOwed">0 تومان</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">مجموع طلب من:</span>
+                                <span class="font-bold text-blue-500" id="reportTotalReceive">0 تومان</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">بیشترین بدهی:</span>
+                                <span class="font-bold" id="reportMaxDebt">0 تومان</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">میانگین بدهی:</span>
+                                <span class="font-bold" id="reportAvgDebt">0 تومان</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="border-2 border-blue-200 rounded-xl p-6">
+                    <h3 class="text-lg font-bold mb-4 text-blue-700">👥 بیشترین بدهکاران</h3>
+                    <div id="topDebtors" class="space-y-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let debts = JSON.parse(localStorage.getItem('debts')) || [];
+        let currentFilter = 'all';
+
+        // Set today's date as default
+        document.getElementById('debtDate').valueAsDate = new Date();
+
+        // Handle form submission
+        document.getElementById('debtForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const debt = {
+                id: Date.now(),
+                person: document.getElementById('personName').value,
+                amount: parseFloat(document.getElementById('amount').value),
+                type: document.getElementById('debtType').value,
+                date: document.getElementById('debtDate').value,
+                description: document.getElementById('description').value,
+                paid: false,
+                createdAt: new Date().toISOString()
+            };
+            
+            debts.push(debt);
+            saveDebts();
+            updateDashboard();
+            
+            // Reset form
+            this.reset();
+            document.getElementById('debtDate').valueAsDate = new Date();
+            
+            // Show success message
+            alert('✅ بدهی با موفقیت ثبت شد!');
+            
+            // Switch to list tab
+            showTab('list');
+        });
+
+        function saveDebts() {
+            localStorage.setItem('debts', JSON.stringify(debts));
+        }
+
+        function updateDashboard() {
+            const totalOwed = debts
+                .filter(d => d.type === 'owed' && !d.paid)
+                .reduce((sum, d) => sum + d.amount, 0);
+            
+            const totalReceive = debts
+                .filter(d => d.type === 'receive' && !d.paid)
+                .reduce((sum, d) => sum + d.amount, 0);
+            
+            const netBalance = totalReceive - totalOwed;
+            
+            document.getElementById('totalOwed').textContent = formatNumber(totalOwed);
+            document.getElementById('totalReceive').textContent = formatNumber(totalReceive);
+            document.getElementById('netBalance').textContent = formatNumber(netBalance);
+            
+            renderDebtsList();
+            updateReports();
+        }
+
+        function formatNumber(num) {
+            return num.toLocaleString('fa-IR');
+        }
+
+        function renderDebtsList() {
+            const container = document.getElementById('debtsList');
+            let filteredDebts = debts;
+            
+            if (currentFilter !== 'all') {
+                filteredDebts = debts.filter(d => d.type === currentFilter);
+            }
+            
+            if (filteredDebts.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-400 py-8">هیچ بدهی‌ای ثبت نشده است</p>';
+                return;
+            }
+            
+            filteredDebts.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            container.innerHTML = filteredDebts.map(debt => `
+                <div class="border-2 ${debt.paid ? 'border-gray-200' : (debt.type === 'owed' ? 'border-red-200' : 'border-blue-200')} rounded-xl p-4 ${debt.paid ? 'paid-item' : ''} card-hover">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="text-2xl">${debt.type === 'owed' ? '📤' : '📥'}</span>
+                                <h3 class="font-bold text-lg">${debt.person}</h3>
+                                ${debt.paid ? '<span class="bg-green-500 text-white text-xs px-2 py-1 rounded-full">پرداخت شده</span>' : ''}
+                            </div>
+                            <p class="text-2xl font-bold ${debt.type === 'owed' ? 'text-red-500' : 'text-blue-500'} mb-2">
+                                ${formatNumber(debt.amount)} تومان
+                            </p>
+                            <p class="text-sm text-gray-600 mb-1">📅 ${new Date(debt.date).toLocaleDateString('fa-IR')}</p>
+                            ${debt.description ? `<p class="text-sm text-gray-500 mt-2">💬 ${debt.description}</p>` : ''}
+                        </div>
+                        <div class="flex gap-2">
+                            ${!debt.paid ? `
+                                <button onclick="markAsPaid(${debt.id})" 
+                                    class="bg-green-500 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:bg-green-600 transition-all"
+                                    title="علامت زدن به عنوان پرداخت شده">
+                                    ✅
+                                </button>
+                            ` : ''}
+                            <button onclick="deleteDebt(${debt.id})" 
+                                class="bg-red-500 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:bg-red-600 transition-all"
+                                title="حذف">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function markAsPaid(id) {
+            const debt = debts.find(d => d.id === id);
+            if (debt && confirm('آیا این بدهی پرداخت شده است؟')) {
+                debt.paid = true;
+                saveDebts();
+                updateDashboard();
+            }
+        }
+
+        function deleteDebt(id) {
+            if (confirm('آیا مطمئن هستید که می‌خواهید این بدهی را حذف کنید؟')) {
+                debts = debts.filter(d => d.id !== id);
+                saveDebts();
+                updateDashboard();
+            }
+        }
+
+        function filterDebts(type) {
+            currentFilter = type;
+            
+            // Update button styles
+            document.getElementById('filterAll').className = type === 'all' 
+                ? 'px-4 py-2 bg-purple-500 text-white rounded-lg font-semibold text-sm'
+                : 'px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm';
+            
+            document.getElementById('filterOwed').className = type === 'owed' 
+                ? 'px-4 py-2 bg-purple-500 text-white rounded-lg font-semibold text-sm'
+                : 'px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm';
+            
+            document.getElementById('filterReceive').className = type === 'receive' 
+                ? 'px-4 py-2 bg-purple-500 text-white rounded-lg font-semibold text-sm'
+                : 'px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm';
+            
+            renderDebtsList();
+        }
+
+        function updateReports() {
+            const totalDebts = debts.length;
+            const owedCount = debts.filter(d => d.type === 'owed' && !d.paid).length;
+            const receiveCount = debts.filter(d => d.type === 'receive' && !d.paid).length;
+            const paidCount = debts.filter(d => d.paid).length;
+            
+            const totalOwedAmount = debts.filter(d => d.type === 'owed' && !d.paid).reduce((sum, d) => sum + d.amount, 0);
+            const totalReceiveAmount = debts.filter(d => d.type === 'receive' && !d.paid).reduce((sum, d) => sum + d.amount, 0);
+            
+            const amounts = debts.filter(d => !d.paid).map(d => d.amount);
+            const maxDebt = amounts.length > 0 ? Math.max(...amounts) : 0;
+            const avgDebt = amounts.length > 0 ? amounts.reduce((a, b) => a + b, 0) / amounts.length : 0;
+            
+            document.getElementById('reportTotalDebts').textContent = totalDebts;
+            document.getElementById('reportOwedCount').textContent = owedCount;
+            document.getElementById('reportReceiveCount').textContent = receiveCount;
+            document.getElementById('reportPaidCount').textContent = paidCount;
+            document.getElementById('reportTotalOwed').textContent = formatNumber(totalOwedAmount) + ' تومان';
+            document.getElementById('reportTotalReceive').textContent = formatNumber(totalReceiveAmount) + ' تومان';
+            document.getElementById('reportMaxDebt').textContent = formatNumber(maxDebt) + ' تومان';
+            document.getElementById('reportAvgDebt').textContent = formatNumber(Math.round(avgDebt)) + ' تومان';
+            
+            // Top debtors
+            const personDebts = {};
+            debts.filter(d => !d.paid).forEach(debt => {
+                if (!personDebts[debt.person]) {
+                    personDebts[debt.person] = 0;
+                }
+                personDebts[debt.person] += debt.amount;
+            });
+            
+            const sortedPersons = Object.entries(personDebts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+            
+            const topDebtorsContainer = document.getElementById('topDebtors');
+            if (sortedPersons.length === 0) {
+                topDebtorsContainer.innerHTML = '<p class="text-gray-400 text-center py-4">داده‌ای موجود نیست</p>';
+            } else {
+                topDebtorsContainer.innerHTML = sortedPersons.map(([person, amount], index) => `
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center gap-3">
+                            <span class="font-bold text-lg text-purple-600">${index + 1}</span>
+                            <span class="font-semibold">${person}</span>
+                        </div>
+                        <span class="font-bold text-blue-600">${formatNumber(amount)} تومان</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function showTab(tab) {
+            // Hide all sections
+            document.getElementById('addSection').classList.add('hidden');
+            document.getElementById('listSection').classList.add('hidden');
+            document.getElementById('reportSection').classList.add('hidden');
+            
+            // Reset tab styles
+            document.getElementById('tabAdd').className = 'px-6 py-3 rounded-xl font-semibold transition-all hover:bg-gray-100';
+            document.getElementById('tabList').className = 'px-6 py-3 rounded-xl font-semibold transition-all hover:bg-gray-100';
+            document.getElementById('tabReport').className = 'px-6 py-3 rounded-xl font-semibold transition-all hover:bg-gray-100';
+            
+            // Show selected section
+            if (tab === 'add') {
+                document.getElementById('addSection').classList.remove('hidden');
+                document.getElementById('tabAdd').className = 'tab-active px-6 py-3 rounded-xl font-semibold transition-all';
+            } else if (tab === 'list') {
+                document.getElementById('listSection').classList.remove('hidden');
+                document.getElementById('tabList').className = 'tab-active px-6 py-3 rounded-xl font-semibold transition-all';
+            } else if (tab === 'report') {
+                document.getElementById('reportSection').classList.remove('hidden');
+                document.getElementById('tabReport').className = 'tab-active px-6 py-3 rounded-xl font-semibold transition-all';
+            }
+        }
+
+        // Initialize
+        updateDashboard();
+    </script>
+</body>
+</html>
